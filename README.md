@@ -9,7 +9,7 @@ Aplikacia vyhladava listky podla konfiguracie vo forme YAML manifestu (standardn
 | Parameter            	| Popis                	| Mozne hodnoty                        	|
 |-----------------	|----------------------	|--------------------------------------	|
 | `date`            	| Datum odchodu vlaku  	| Datum vo formate "YYYY-MM-DD"        	|
-| `time`            	| Cas odchodu vlaku    	| Cas vo formate "HH:MM"               	|
+| `time`            	| Cas odchodu vlaku    	| Cas vo formate "HH:MM" alebo zoznam casov |
 | `from`            	| Vychodzia stanica    	| ID lokality, viz. [locations.md](locations.md)       	|
 | `from_type`            	| Typ vychodzej stanice    	| CITY/STATION       	|
 | `to`              	| Destinacia           	| ID lokality, viz. [locations.md](locations.md)       	|
@@ -44,6 +44,16 @@ V pripade viacerych preferovanych tried zase takto:
 preffered_class:
   - C1
   - TRAIN_LOW_COST
+```
+
+### Viacero casov odchodu
+
+Ak je potrebne sledovat viac odchodov v jeden den, mozno parameter `time` zadat ako zoznam. Aplikacia postupne kontroluje kazdy z vybranych casov a pri uspechu oznami konkretny cas.
+
+```
+time:
+  - "06:05"
+  - "07:10"
 ```
 
 Pre ukazku konfiguracneho suboru viz. [config.yaml](config.yaml).

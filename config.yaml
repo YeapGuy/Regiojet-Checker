@@ -1,6 +1,8 @@
 # Train details
 date: "2022-10-01"
-time: "00:09"
+time:
+  - "00:09"
+  - "06:05"
 from: "372825009" # Ostrava - Stodolni
 from_type: STATION
 to: "10202003" # Praha

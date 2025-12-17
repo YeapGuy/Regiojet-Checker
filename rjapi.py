@@ -11,6 +11,7 @@ class rjapi:
         self.__search_endpoint = "https://brn-ybus-pubapi.sa.cz/restapi/routes/search/simple?departureDate={}&fromLocationId={}&toLocationId={}&fromLocationType={}&toLocationType={}&tariffs={}"
         self.__train_enpoint = "https://brn-ybus-pubapi.sa.cz/restapi/routes/{0}/simple?routeId={0}&fromStationId={1}&toStationId={2}&tariffs={3}"
         self.__shop_link = "https://regiojet.cz/?departureDate={}&fromLocationId={}&toLocationId={}&fromLocationType={}&toLocationType={}&tariffs={}"
+        self.__last_matched_time = None
     
 
     def __load_config(self, config_file):
@@ -23,6 +24,15 @@ class rjapi:
             cfg["quantity"] = 1
         if type(cfg["preffered_class"]) is str:
             cfg["preffered_class"] = [cfg["preffered_class"]]
+        time_value = cfg.get("time")
+        if isinstance(time_value, str):
+            cfg["time"] = [time_value.strip()]
+        elif isinstance(time_value, list):
+            cfg["time"] = [str(t).strip() for t in time_value if str(t).strip()]
+        else:
+            raise ValueError("time must be a string or list of strings")
+        if not cfg["time"]:
+            raise ValueError("time must contain at least one value")
         return cfg
     
 
@@ -51,28 +61,30 @@ class rjapi:
         
         # Find trains with given time
         day_trains = day_trains["routes"]
-        datetime = self.config["date"] + "T" + self.config["time"]
-        trains = []
-        for i in day_trains:
-            if datetime in i["departureTime"]:
-                trains.append(i)
-        
-        # No trains with given time
-        if not trains:
-            return False
-        
-        for train in trains:
-            # Not enough tickets available or train not bookable
-            if train["freeSeatsCount"] < self.config["quantity"] or not train["bookable"]:
-                continue
-        
-            # Seat available - max changes exceeded or preffered class not available
-            if not self.search_train(train):
+        for tracked_time in self.config["time"]:
+            datetime = self.config["date"] + "T" + tracked_time
+            trains = []
+            for i in day_trains:
+                if datetime in i["departureTime"]:
+                    trains.append(i)
+
+            # No trains with given time
+            if not trains:
                 continue
 
-            # Seat available
-            return True
-        
+            for train in trains:
+                # Not enough tickets available or train not bookable
+                if train["freeSeatsCount"] < self.config["quantity"] or not train["bookable"]:
+                    continue
+
+                # Seat available - max changes exceeded or preffered class not available
+                if not self.search_train(train):
+                    continue
+
+                # Seat available
+                self.__last_matched_time = tracked_time
+                return True
+
         # No train with seats available
         return False
 
@@ -80,7 +92,7 @@ class rjapi:
     def send_alert(self):
         # Craft data
         data = {
-            "message" : "Tickets for {}T{} available!".format(self.config["date"], self.config["time"]),
+            "message" : "Tickets for {}T{} available!".format(self.config["date"], self.__last_matched_time or self.config["time"][0]),
             "action" : self.__shop_link.format(self.config["date"], self.config["from"], self.config["to"], self.config["from_type"], self.config["to_type"], self.config["tariff"])
         }
         # Send to notify.run
