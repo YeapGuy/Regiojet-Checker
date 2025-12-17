@@ -73,3 +73,12 @@ Repozitar obsahuje `Dockerfile`, ktory umoznuje zbuildenie docker image. Tento i
 $ docker build -t rjchecker .
 $ docker run -it -d -v $PWD/config.yaml:/app/config.yaml rjchecker
 ```
+
+### Predpripraveny image
+
+V ramci GitHub Actions sa automaticky publikuje image do GitHub Container Registry pod adresou `ghcr.io/yeapguy/regiojet-checker`. Pri pouziti tejto verzie nie je potrebne lokalne buildit image.
+
+```
+$ docker pull ghcr.io/yeapguy/regiojet-checker:latest
+$ docker run -it -d -v $PWD/config.yaml:/app/config.yaml ghcr.io/yeapguy/regiojet-checker:latest
+```
